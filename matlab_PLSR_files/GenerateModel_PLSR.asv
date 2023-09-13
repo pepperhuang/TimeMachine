@@ -1,0 +1,38 @@
+%% Load training dataset
+load CPtrain_LocalTime.mat
+%% Select number of components
+NC=5;
+%% Select number of genes
+max_var=100;
+
+%% z-score within samples
+dat.num=zscore(dat.num);
+
+%% Observed phase
+y = dat.time;
+[n,p] = size(dat.num);
+
+%% Train with NC components
+[~,~,~,~,beta,~,~,stats] = plsregress(dat.num,[cosd(y), sind(y)],NC);
+
+%% Sort the weights of PLS 
+W_value = sum(abs(stats.W'));
+[W_sorted, index] = sort(W_value, 'descend');
+
+%% Save weights and indices of sorted weights
+writematrix(stats.W,'weights_1sample_5_100_LocalTime.csv');
+writematrix(index,'indices_1sample_5_100_LocalTime.csv');
+
+%% Get model values, for NC components and max_var number of genes
+[~,~,~,~,beta,~,~,stats] = plsregress(dat.num(:,index(1:max_var)), [cosd(y), sind(y)],NC);
+
+%% Save the model's regression coefficients
+writematrix(beta,'RegressionCoefficients_PLSR_1sample_5_100_LocalTime_V2.xlsx');
+
+%% Save model variables
+model.index=index
+model.beta=beta
+model.max_var=max_var
+save model_NC5_G100_1sample_LocalTime_V2 model
+
+
